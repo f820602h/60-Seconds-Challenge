@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<title>Document</title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.css" />
+		<link href="https://fonts.googleapis.com/css?family=Roboto+Condensed&display=swap" rel="stylesheet" />
+		<link rel="stylesheet" href="style/style.css" />
+	</head>
+
+	<body>
+		<div class="container"></div>
+
+		<div class="landing" style="display: none;">
+			<div class="title">
+				<div class="sixty">60</div>
+				<h1>SECONDS<span>+−×÷</span><br />CHALLENGE</h1>
+			</div>
+			<div>
+				<a class="start" href="javascript:;">START!</a>
+				<h4>try to answer more as you can</h4>
+			</div>
+		</div>
+
+		<div class="game" style="display: none;">
+			<div class="info">
+				<div class="display">
+					<div class="minTitle">60 SECONDS CHALLENGE</div>
+					<div class="scoreBoard">
+						<div class="score">SCORE</div>
+						<div class="scoreNum"></div>
+					</div>
+				</div>
+				<div class="timer"><span class="min">01</span> : <span class="sec">00</span></div>
+			</div>
+			<div class="quiz">
+				<div class="num" id="num1"></div>
+				<div class="calc" id="operator"></div>
+				<div class="num" id="num2"></div>
+				<div class="calc">=</div>
+				<div class="ans"><input type="text" maxlength="4" /></div>
+			</div>
+		</div>
+
+		<div class="result" style="display: none;">
+			<div class="minTitle">60 SECONDS CHALLENGE</div>
+			<div class="message">YOUR FINAL SCORE</div>
+			<div class="finScore"></div>
+			<a class="restart" href="javascript:;">TRY AGAIN!</a>
+		</div>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		<script>
+			let rootElement = document.querySelector('body')
+			let landingView = document.querySelector('.landing').innerHTML
+			let gameView = document.querySelector('.game').innerHTML
+			let resultView = document.querySelector('.result').innerHTML
+			let gameTime = 60 //遊戲時間
+			let timeCount = gameTime //倒數
+			let totalScore = 0 //總得分
+			let level = 0 //難度級數　0~2
+			let difficult = [
+				{
+					minNumber: 1,
+					maxNumber: 9,
+					score: 1,
+				},
+				{
+					minNumber: 10,
+					maxNumber: 99,
+					score: 1,
+				},
+				{
+					minNumber: 100,
+					maxNumber: 999,
+					score: 5,
+				},
+			]
+			let operation = ['+', '-', '×', '÷']
+			let random = function(a, b) {
+				return a + Math.floor((b - a + 1) * Math.random())
+			}
+
+			function showQuiz(lv) {
+				let num1 = document.querySelector('#num1')
+				let num2 = document.querySelector('#num2')
+				let operator = document.querySelector('#operator')
+				let randomNum1 = random(difficult[lv].minNumber, difficult[lv].maxNumber)
+				let randomNum2 = random(difficult[lv].minNumber, difficult[lv].maxNumber)
+				let randomOperator = operation[random(0, 3)]
+				if (randomNum1 < randomNum2) {
+					let a = randomNum1
+					randomNum1 = randomNum2
+					randomNum2 = a
+				}
+				if (lv >= 1) {
+					randomOperator = operation[random(0, 1)]
+				}
+				if (randomOperator == '÷') {
+					randomNum1 = randomNum1 - (randomNum1 % randomNum2)
+				}
+				num1.textContent = randomNum1
+				num2.textContent = randomNum2
+				operator.textContent = randomOperator
+			}
+
+			function showScore() {
+				let scoreNum = document.querySelector('.scoreNum')
+				let scoreString = totalScore.toString()
+				let scoreLength = scoreString.length
+				for (let i = 0; i < 3 - scoreLength; i++) {
+					scoreString = '0' + scoreString
+				}
+				scoreNum.textContent = scoreString
+			}
+
+			function setLevel(time) {
+				if (time < 20) {
+					level = 2
+				} else if (time < 40) {
+					level = 1
+				}
+			}
+
+			function setTimer(time) {
+				let min = document.querySelector('.min')
+				let sec = document.querySelector('.sec')
+				if (time < 10) {
+					min.textContent = '00'
+					sec.textContent = '0' + time.toString()
+				} else {
+					min.textContent = '00'
+					sec.textContent = time.toString()
+				}
+				if (time == 0) {
+					finish()
+				}
+			}
+
+			function marker(lv) {
+				let scoreNum = document.querySelector('.scoreNum')
+				let quizNum1 = Number(document.querySelector('#num1').textContent)
+				let quizNum2 = Number(document.querySelector('#num2').textContent)
+				let quizOperator = document.querySelector('#operator').textContent
+				let ans = document.querySelector('input').value
+				let answer
+				if (quizOperator == '+') {
+					answer = quizNum1 + quizNum2
+				} else if (quizOperator == '-') {
+					answer = quizNum1 - quizNum2
+				} else if (quizOperator == '×') {
+					answer = quizNum1 * quizNum2
+				} else if (quizOperator == '÷') {
+					answer = quizNum1 / quizNum2
+				}
+				console.log(answer, ans)
+				if (ans == answer) {
+					totalScore = totalScore + difficult[lv].score
+				} else {
+					totalScore = totalScore - 1
+				}
+			}
+
+			let timer
+			function start() {
+				timer = setInterval(function() {
+					timeCount = timeCount - 1
+					setTimer(timeCount)
+					setLevel(timeCount)
+				}, 1000)
+			}
+
+			function finish() {
+				clearInterval(timer)
+				document.querySelector('.container').innerHTML = resultView
+				document.querySelector('.finScore').innerHTML = totalScore
+				timeCount = gameTime
+				totalScore = 0
+				level = 0
+			}
+
+			document.querySelector('.container').innerHTML = landingView
+			document.querySelector('.start').addEventListener('click', function() {
+				document.querySelector('.container').innerHTML = gameView
+				document.querySelector('input').focus()
+				showQuiz(level)
+				start()
+			})
+			rootElement.addEventListener(
+				'click',
+				function(e) {
+					let targetElement = e.target
+					let selector = '.restart'
+					if (targetElement.matches(selector)) {
+						document.querySelector('.container').innerHTML = gameView
+						document.querySelector('input').focus()
+						showQuiz(level)
+						start()
+					}
+				},
+				true
+			)
+			rootElement.addEventListener(
+				'keydown',
+				function(e) {
+					let targetElement = e.target
+					let selector = 'input'
+					if (e.which == 13 && targetElement.matches(selector)) {
+						marker(level)
+						showScore()
+						showQuiz(level)
+						document.querySelector('input').value = ''
+					}
+				},
+				true
+			)
+		</script>
+	</body>
+</html>
